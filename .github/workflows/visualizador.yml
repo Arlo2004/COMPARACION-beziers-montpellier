@@ -1,32 +1,35 @@
-name: Generar Graficos Comparativos
+name: Visualizador Climatico Diario
+
 on:
   schedule:
-    - cron: '30 5 * * *' # Se ejecuta 5:30 AM
-  workflow_dispatch: # Botón para ejecutar manualmente
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 
 jobs:
-  build:
+  generar-graficos:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+        
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
-
-      - name: Install dependencies
-        run: pip install pandas matplotlib seaborn
-
-      - name: Run script
-        run: python script-climatica.py  # Nombre exacto de tu archivo
-
-      - name: Save Charts
+          
+      - name: Instalar dependencias
         run: |
-          git config --global user.name 'Graficador-Bot'
-          git config --global user.email 'bot@github.com'
-          # Esto asegura que guarde todo lo que esté en la carpeta comparativa
+          python -m pip install --upgrade pip
+          pip install pandas matplotlib seaborn
+          
+      - name: Ejecutar script de graficos
+        run: python script-climatica.py
+        
+      - name: Commit y Push de las imagenes
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "action@github.com"
           git add comparativa_ciudades/*.png
-          git commit -m "Actualizacion de graficos: $(date +'%Y-%m-%d')" || exit 0
-          git push
+          git commit -m "Actualizacion diaria de graficos comparativos RGA" || echo "No hay cambios para commitear"
+          git push origin main
