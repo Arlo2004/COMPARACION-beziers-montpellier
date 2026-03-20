@@ -61,7 +61,7 @@ def generar_visualizacion(nombre_estacion, df_plot):
     print(f"Grafico generado: {ruta}")
 
 def main():
-    url = "https://raw.githubusercontent.com/Arlo2004/updated-_recolector/main/herault_pronostico_meteofrance.csv"
+    url = "https://raw.githubusercontent.com/Arlo2004/updated-_recolector/refs/heads/main/herault_pronostico_meteofrance.csv"
     print(f"Descargando datos desde: {url}")
     
     try:
