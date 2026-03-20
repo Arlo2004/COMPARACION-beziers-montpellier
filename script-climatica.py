@@ -43,7 +43,7 @@ def generar_visualizacion(nombre_estacion, df_plot):
     
     # Título dinámico y en francés
     estacion_fr = "BÉZIERS-VIAS" if "BEZIERS" in nombre_estacion else "MONTPELLIER-AÉROPORT"
-    plt.title(f'MONITEUR DE RISQUE RGA : {estacion_fr}\n(Seuil de contraction : 0.2mm)', pad=20, fontsize=14, fontweight='bold')
+    plt.title(f'MONITEUR DE RISQUE RGA : {estacion_fr}\n', pad=20, fontsize=14, fontweight='bold')
     
     # Formatear el eje Y para mostrar los valores originales de lluvia
     # (sumamos 0.2 a la etiqueta para que el centro diga 0.2 y no 0)
