@@ -6,67 +6,74 @@ import os
 
 def parse_fecha(fecha_str):
     try:
-        dt = pd.to_datetime(fecha_str, dayfirst=True)
+        dt = pd.to_datetime(fecha_str)
         return dt.strftime('%d/%m')
     except:
         return fecha_str
 
 def generar_visualizacion(nombre_estacion, df_plot):
-    if 'FECHA' in df_plot.columns:
-        df_plot['FECHA_STR'] = df_plot['FECHA'].apply(parse_fecha)
-    else:
-        return
-        
-    df_plot['TM_INVERTIDA'] = df_plot['TM'] * -1
+    df_plot = df_plot.copy()
+    df_plot['FECHA_STR'] = df_plot['FECHA'].apply(parse_fecha)
     
-    sns.set_theme(style="white")
-    plt.figure(figsize=(10, 6))
+    sns.set_theme(style="whitegrid")
+    fig, ax1 = plt.subplots(figsize=(12, 7))
     
     x = range(len(df_plot))
     
-    color_lluvia = chr(35) + '4a90e2'
-    color_temp = chr(35) + 'ff9f43'
+    color_rr = chr(35) + '4a90e2'
+    color_tm = chr(35) + 'ff9f43'
     
-    plt.bar(x, df_plot['RR'], color=color_lluvia, label='Lluvia (RR)')
-    plt.bar(x, df_plot['TM_INVERTIDA'], color=color_temp, label='Temp. Media (TM)')
+    # Eje 1: Lluvia (Barras) - El 0 está abajo
+    ax1.bar(x, df_plot['RR'], color=color_rr, label='Precipitación (mm)', alpha=0.8)
+    ax1.set_ylabel('Precipitación (mm)', color=color_rr, fontweight='bold')
     
-    plt.axhline(0.2, color='red', linestyle='-', linewidth=2, label='Umbral Equilibrio (0.2)')
-    plt.axhspan(0, 0.2, color='red', alpha=0.1, label='Zona Sequia (< 0.2)')
-    plt.axhspan(0.2, max(df_plot['RR'].max() + 1, 5), color='blue', alpha=0.05, label='Zona Humedad (> 0.2)')
+    # Marcador de sequía: Línea roja en 0.2 y sombreado inferior
+    ax1.axhline(0.2, color='red', linestyle='--', linewidth=1.5, label='Umbral RGA (0.2mm)')
+    ax1.axhspan(0, 0.2, color='red', alpha=0.1)
     
-    plt.xticks(x, df_plot['FECHA_STR'], rotation=45, ha='right')
+    # Eje 2: Temperatura (Línea) para que no se superponga con las barras
+    ax2 = ax1.twinx()
+    ax2.plot(x, df_plot['TM'], color=color_tm, marker='o', linewidth=2, label='Temp. Media (°C)')
+    ax2.set_ylabel('Temperatura Media (°C)', color=color_tm, fontweight='bold')
     
-    plt.title(f'PRONÓSTICO DE RIESGO RGA: {nombre_estacion}', pad=20, fontsize=14, fontweight='bold')
+    # Configuración de escalas (para que el 0 siempre sea la base)
+    ax1.set_ylim(0, max(df_plot['RR'].max() + 1, 2))
+    ax2.set_ylim(0, max(df_plot['TM'].max() + 5, 30))
     
-    formatter = ticker.FuncFormatter(lambda y, pos: f"{abs(y):g}")
-    plt.gca().yaxis.set_major_formatter(formatter)
+    # Eje X con todas las fechas del CSV
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(df_plot['FECHA_STR'], rotation=45)
     
-    plt.ylabel('Valores (' + chr(176) + 'C / mm)')
-    plt.xlabel('Fecha')
+    plt.title(f'MONITOR DE RIESGO ESTRUCTURAL RGA: {nombre_estacion}', pad=20, fontsize=14, fontweight='bold')
     
-    plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
-    sns.despine()
+    # Unificar leyendas
+    h1, l1 = ax1.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax1.legend(h1+h2, l1+l2, loc='upper left')
+    
     plt.tight_layout()
-    
     os.makedirs('comparativa_ciudades', exist_ok=True)
-    
-    nombre_archivo_base = "beziers" if "BEZIERS" in nombre_estacion else "montpellier"
-    ruta = os.path.join('comparativa_ciudades', f'pronostico_{nombre_archivo_base}.png')
-    
-    plt.savefig(ruta, dpi=300, bbox_inches='tight')
+    n_file = "beziers" if "BEZIERS" in nombre_estacion else "montpellier"
+    plt.savefig(f'comparativa_ciudades/pronostico_{n_file}.png', dpi=300)
     plt.close()
 
 def main():
+    # URL Publica (ya que el repo es publico
     url = "https://raw.githubusercontent.com/Arlo2004/updated-_recolector/refs/heads/main/herault_pronostico_meteofrance.csv"
+    
     try:
-        df = pd.read_csv(url)
+        df = pd.read_csv(url).dropna(subset=['RR', 'TM'])
     except:
         return
-        
+    
+    # Nombres exactos de tus estaciones
     for est in ['BEZIERS-VIAS', 'MONTPELLIER-AEROPORT']:
-        df_est = df[df['NOM_POSTE'] == est].copy()
+        # Filtramos y quitamos el .tail() para que salgan todos los dias de la URL
+        df_est = df[df['NOM_POSTE'] == est]
         if not df_est.empty:
-            generar_visualizacion(est, df_est.tail(7))
+            generar_visualizacion(est, df_est)
 
 if __name__ == "__main__":
     main()
+    
+
