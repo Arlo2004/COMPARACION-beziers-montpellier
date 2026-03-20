@@ -30,6 +30,7 @@ jobs:
         run: |
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "action@github.com"
-          git add comparativa_ciudades/*.png
+          mkdir -p comparativa_ciudades
+          git add comparativa_ciudades/
           git commit -m "Actualizacion diaria de graficos comparativos RGA" || echo "No hay cambios para commitear"
           git push origin main
